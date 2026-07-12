@@ -1,0 +1,29 @@
+{
+  "name": "transitops-odoo-hackathon-2026",
+  "version": "1.0.0",
+  "description": "Your task is to build TransitOps, a centralized platform that allows organizations to manage the complete lifecycle of their transport operations—from vehicle registration and driver management to dispatching, maintenance, fuel logging, and analytics",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev" : "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2025tarunmotwani-maker/Transitops-odoo-hackathon-2026.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/2025tarunmotwani-maker/Transitops-odoo-hackathon-2026/issues"
+  },
+  "homepage": "https://github.com/2025tarunmotwani-maker/Transitops-odoo-hackathon-2026#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.7.4"
+  }
+}
