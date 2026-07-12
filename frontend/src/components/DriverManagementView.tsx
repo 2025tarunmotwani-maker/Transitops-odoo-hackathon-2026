@@ -16,8 +16,8 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import PrimaryButton from './PrimaryButton';
-import Badge from './Badge';
+import PrimaryButton from './shared/PrimaryButton';
+import Badge from './shared/Badge';
 
 interface DriverManagementViewProps {
   drivers: Driver[];
