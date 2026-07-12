@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Vehicle, VehicleType, VehicleStatus } from '../types';
 import { 
   Plus, 
@@ -58,7 +58,12 @@ export default function VehicleRegistryView({
   const [acquisitionCost, setAcquisitionCost] = useState<number>(30000);
   const [status, setStatus] = useState<VehicleStatus>('Available');
   const [logisticsHub, setLogisticsHub] = useState<'North' | 'South' | 'East' | 'West'>('North');
-  
+  const [vehicleList, setVehicleList] = useState<Vehicle[]>(vehicles);
+
+  useEffect(() => {
+    setVehicleList(vehicles);
+  }, [vehicles]);
+
   // Validation feedback
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -172,16 +177,65 @@ export default function VehicleRegistryView({
     }
   };
 
-  const handleDelete = (regNumber: string) => {
-    const v = vehicles.find(item => item.registrationNumber === regNumber);
-    if (v && v.status === 'On Trip') {
-      alert('Cannot delete a vehicle while it is active on a trip.');
+const fetchVehicles = async () => {
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || "http://localhost:8081"}/api/vehicles/`
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Failed to fetch vehicles.");
+    }
+
+    setVehicleList(result.data);
+
+  } catch (error) {
+    console.error("Error fetching vehicles:", error);
+  }
+};
+
+ useEffect(() => {
+    fetchVehicles();
+  }, []);
+
+const handleDelete = async (regNumber: string) => {
+  const v = vehicleList.find(item => item.registrationNumber === regNumber);
+
+  if (v && v.status === "On Trip") {
+    alert("Cannot delete a vehicle while it is active on a trip.");
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to remove vehicle ${regNumber} from the registry?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || "http://localhost:8081"}/api/vehicles/${regNumber}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      alert(data.message || "Failed to delete vehicle.");
       return;
     }
-    if (confirm(`Are you sure you want to remove vehicle ${regNumber} from the registry?`)) {
-      onDeleteVehicle(regNumber);
-    }
-  };
+
+    onDeleteVehicle(regNumber);
+    setVehicleList(prev => prev.filter(item => item.registrationNumber !== regNumber));
+    alert(data.message || "Vehicle deleted successfully.");
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to delete vehicle.");
+  }
+};
 
   // Filter vehicles
   const filteredVehicles = vehicles.filter(v => {

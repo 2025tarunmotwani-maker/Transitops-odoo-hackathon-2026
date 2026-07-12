@@ -1,4 +1,4 @@
-const User = require("../model/userSchema");
+const User = require("../models/userSchema.js");
 
 const authenticate = async (req, res, next) => {
 

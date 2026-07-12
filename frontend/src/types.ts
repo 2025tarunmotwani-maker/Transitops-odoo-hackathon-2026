@@ -1,9 +1,16 @@
-export type Role = 'FleetManager' | 'Driver' | 'SafetyOfficer' | 'FinancialAnalyst';
+export type Role =
+  | 'Fleet Manager'
+  | 'Driver'
+  | 'Safety Officer'
+  | 'Financial Analyst';
 
 export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  name: string;
   role: Role;
+  status: "Active" | "Inactive";
 }
 
 export interface AppSettings {

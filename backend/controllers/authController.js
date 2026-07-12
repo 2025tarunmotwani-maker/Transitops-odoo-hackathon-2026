@@ -84,7 +84,11 @@ const login = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ email });
+        const users = await User.find();
+
+console.log(users);
+
+const user = await User.findOne({ email });
 
         if (!user) {
             return res.status(400).json({
@@ -92,8 +96,11 @@ const login = async (req, res) => {
             });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+const isMatch = password === user.password;
 
+console.log("Match:", isMatch);
+
+console.log("Match  :", isMatch);
         if (!isMatch) {
             return res.status(400).json({
                 message: "Invalid Password",

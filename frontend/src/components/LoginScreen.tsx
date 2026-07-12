@@ -5,17 +5,17 @@ import { Shield, Key, Mail, Truck, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 const ROLE_LABELS: Record<Role, string> = {
-  FleetManager: 'Fleet Manager',
-  Driver: 'Dispatcher',
-  SafetyOfficer: 'Safety Officer',
-  FinancialAnalyst: 'Financial Analyst'
+  'Fleet Manager': 'Fleet Manager',
+  'Driver': 'Dispatcher',
+  'Safety Officer': 'Safety Officer',
+  'Financial Analyst': 'Financial Analyst',
 };
 
 const ROLE_DESCRIPTIONS: Array<{ label: string; value: Role }> = [
-  { label: 'Fleet Manager', value: 'FleetManager' },
-  { label: 'Dispatcher', value: 'Driver' },
-  { label: 'Safety Officer', value: 'SafetyOfficer' },
-  { label: 'Financial Analyst', value: 'FinancialAnalyst' }
+  { label: "Fleet Manager", value: "Fleet Manager" },
+  { label: "Dispatcher", value: "Driver" },
+  { label: "Safety Officer", value: "Safety Officer" },
+  { label: "Financial Analyst", value: "Financial Analyst" },
 ];
 
 interface LoginScreenProps {
@@ -25,40 +25,57 @@ interface LoginScreenProps {
 export default function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
   const [email, setEmail] = useState('manager@transitops.com');
   const [password, setPassword] = useState('admin123');
-  const [role, setRole] = useState<Role>('FleetManager');
+  const [role, setRole] = useState<Role>('Fleet Manager');
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    setTimeout(() => {
-      const match = SEED_USERS.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && u.role === role
-      );
+  setError("");
+  setLoading(true);
 
-      if (!match) {
-        setError('Invalid credentials. Please verify email, password and role.');
-        setLoading(false);
-        return;
-      }
+  console.log({
+    email,
+    password,
+  });
 
-      const expectedPassword =
-        match.email.split('@')[0] === 'manager' ? 'admin123' : `${match.email.split('@')[0]}123`;
+  try {
+    const response = await fetch("http://localhost:8081/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    });
 
-      if (password !== expectedPassword) {
-        setError('Incorrect password. Please try again.');
-        setLoading(false);
-        return;
-      }
+    const data = await response.json();
 
-      onLoginSuccess(match);
-      setLoading(false);
-    }, 450);
-  };
+    if (!response.ok) {
+      setError(data.message || "Login failed");
+      return;
+    }
+
+    // Verify selected role matches backend role
+    if (data.user.role !== role) {
+      setError("Selected role does not match your account.");
+      return;
+    }
+
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    onLoginSuccess(data.user);
+  } catch (err) {
+    console.error(err);
+    setError("Unable to connect to server.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-6 lg:p-12">
