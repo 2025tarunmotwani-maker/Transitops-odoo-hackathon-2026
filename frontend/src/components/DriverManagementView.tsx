@@ -16,6 +16,8 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import PrimaryButton from './PrimaryButton';
+import Badge from './Badge';
 
 interface DriverManagementViewProps {
   drivers: Driver[];
@@ -177,7 +179,7 @@ export default function DriverManagementView({
   return (
     <div className="space-y-6">
       {/* Filters and Command Panel */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 tp-card p-4 rounded-xl shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
           <input
@@ -185,7 +187,7 @@ export default function DriverManagementView({
             placeholder="Search drivers by name or CDL..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500"
+            className="tp-search pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400"
           />
         </div>
 
@@ -213,13 +215,10 @@ export default function DriverManagementView({
           </select>
 
           {canManage ? (
-            <button
-              onClick={openAddForm}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs cursor-pointer"
-            >
+            <PrimaryButton onClick={openAddForm} className="flex items-center gap-1.5 text-xs">
               <Plus className="h-4 w-4" />
               Onboard Driver
-            </button>
+            </PrimaryButton>
           ) : (
             <span className="text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded-lg flex items-center gap-1.5 font-medium">
               <Info className="h-3.5 w-3.5" />
@@ -229,120 +228,90 @@ export default function DriverManagementView({
         </div>
       </div>
 
-      {/* Roster Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDrivers.map((driver) => {
-          const compliance = checkLicenseStatus(driver.licenseExpiryDate);
-          
-          let statusBadgeColor = 'bg-slate-100 text-slate-800 border-slate-200';
-          if (driver.status === 'Available') statusBadgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-          if (driver.status === 'On Trip') statusBadgeColor = 'bg-blue-50 text-blue-700 border-blue-100';
-          if (driver.status === 'Off Duty') statusBadgeColor = 'bg-slate-100 text-slate-600 border-slate-200';
-          if (driver.status === 'Suspended') statusBadgeColor = 'bg-rose-100 text-rose-700 border-rose-200';
+      {/* Roster Table */}
+      <div className="tp-card rounded-xl shadow-xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Driver</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">License #</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Category</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Expiry</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Contact</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Safety</th>
+                <th className="px-4 py-3 text-center font-bold text-slate-600 uppercase text-xs tracking-wide">Status</th>
+                {canManage && <th className="px-4 py-3 text-center font-bold text-slate-600 uppercase text-xs tracking-wide">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredDrivers.map((driver) => {
+                const compliance = checkLicenseStatus(driver.licenseExpiryDate);
+                // Safety score styling
+                let safetyColor = 'text-rose-600 bg-rose-50';
+                if (driver.safetyScore >= 85) safetyColor = 'text-emerald-700 bg-emerald-50';
+                else if (driver.safetyScore >= 70) safetyColor = 'text-amber-700 bg-amber-50';
 
-          // Safety score styling
-          let safetyColor = 'text-rose-600 bg-rose-50';
-          if (driver.safetyScore >= 85) safetyColor = 'text-emerald-700 bg-emerald-50';
-          else if (driver.safetyScore >= 70) safetyColor = 'text-amber-700 bg-amber-50';
-
-          return (
-            <motion.div
-              layout
-              key={driver.licenseNumber}
-              className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow duration-250 flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between">
-                <div className="space-y-1">
-                  <h4 className="text-base font-bold text-slate-800 truncate max-w-[170px]" title={driver.name}>
-                    {driver.name}
-                  </h4>
-                  <p className="text-xs text-slate-400 font-medium font-mono">{driver.licenseNumber}</p>
-                </div>
-                <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${statusBadgeColor}`}>
-                  {driver.status}
-                </span>
-              </div>
-
-              {/* Specs */}
-              <div className="p-5 space-y-3.5 text-xs font-medium flex-1">
-                {/* License category */}
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400">License Category</span>
-                  <span className="text-slate-800 font-bold bg-slate-100 px-2.5 py-0.5 rounded-sm border border-slate-200">
-                    {driver.licenseCategory}
-                  </span>
-                </div>
-
-                {/* Expiration date */}
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" /> Expiry Date
-                  </span>
-                  <span className={`px-2 py-0.5 rounded-sm text-[11px] font-bold border ${compliance.color}`}>
-                    {driver.licenseExpiryDate} 
-                    {compliance.status === 'Expired' && ' (Blocked)'}
-                    {compliance.status === 'Expiring Soon' && ' (Renew!)'}
-                  </span>
-                </div>
-
-                {/* Contact phone */}
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Phone className="h-3.5 w-3.5" /> Phone
-                  </span>
-                  <span className="text-slate-700 font-mono">{driver.contactNumber}</span>
-                </div>
-
-                {/* Safety Rating */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                  <span className="text-slate-400 flex items-center gap-1">
-                    <Award className="h-3.5 w-3.5" /> Safety Score
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-16 bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full ${driver.safetyScore >= 85 ? 'bg-emerald-500' : driver.safetyScore >= 70 ? 'bg-amber-500' : 'bg-rose-500'}`}
-                        style={{ width: `${driver.safetyScore}%` }}
-                      />
-                    </div>
-                    <span className={`px-2 py-0.5 rounded-sm font-extrabold ${safetyColor}`}>
-                      {driver.safetyScore}/100
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Footer */}
-              {canManage && (
-                <div className="px-5 py-3.5 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-2 text-xs">
-                  <button
-                    onClick={() => openEditForm(driver)}
-                    disabled={driver.status === 'On Trip'}
-                    className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                return (
+                  <motion.tr
+                    key={driver.licenseNumber}
+                    className="hover:bg-slate-50/50 transition-colors"
                   >
-                    <Edit3 className="h-4 w-4" />
-                    <span>Edit</span>
-                  </button>
+                    <td className="px-4 py-4 font-bold text-slate-800">{driver.name}</td>
+                    <td className="px-4 py-4 font-mono text-slate-600 text-xs">{driver.licenseNumber}</td>
+                    <td className="px-4 py-4 text-slate-600 font-medium">{driver.licenseCategory}</td>
+                    <td className="px-4 py-4">
+                      <span className={`px-2.5 py-0.5 rounded-sm text-[11px] font-bold border ${compliance.color}`}>
+                        {driver.licenseExpiryDate}
+                        {compliance.status === 'Expired' && ' (Blocked)'}
+                        {compliance.status === 'Expiring Soon' && ' (Renew!)'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 font-mono text-slate-600 text-xs">{driver.contactNumber}</td>
+                    <td className="px-4 py-4">
+                      <span className={`px-2 py-0.5 rounded-sm font-bold text-xs ${safetyColor}`}>
+                        {driver.safetyScore}%
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <Badge variant={driver.status === 'Available' ? 'available' : driver.status === 'On Trip' ? 'ontrip' : driver.status === 'Suspended' ? 'suspended' : driver.status === 'Off Duty' ? 'offduty' : 'default'}>
+                        {driver.status}
+                      </Badge>
+                    </td>
+                    {canManage && (
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => openEditForm(driver)}
+                            disabled={driver.status === 'On Trip'}
+                            className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                            title="Edit"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
 
-                  {(userRole === 'FleetManager') && (
-                    <button
-                      onClick={() => handleDelete(driver.licenseNumber)}
-                      disabled={driver.status === 'On Trip'}
-                      className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span>Delete</span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
+                          {(userRole === 'FleetManager') && (
+                            <button
+                              onClick={() => handleDelete(driver.licenseNumber)}
+                              disabled={driver.status === 'On Trip'}
+                              className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
         {filteredDrivers.length === 0 && (
-          <div className="col-span-full py-12 bg-white rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+          <div className="py-12 flex flex-col items-center justify-center text-center">
             <UserCheck className="h-12 w-12 text-slate-300 mb-3" />
             <p className="text-slate-500 font-bold">No drivers found</p>
             <p className="text-slate-400 text-xs mt-1">Try relaxing your search constraints or compliance filters.</p>
@@ -501,12 +470,9 @@ export default function DriverManagementView({
                   >
                     Cancel
                   </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
-                  >
+                  <PrimaryButton type="submit" className="text-xs">
                     {editingDriver ? 'Save Changes' : 'Onboard Driver'}
-                  </button>
+                  </PrimaryButton>
                 </div>
               </form>
             </motion.div>
