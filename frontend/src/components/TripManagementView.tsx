@@ -15,10 +15,14 @@ import {
   X,
   Gauge,
   Flame,
-  Info
+  Info,
+  ChevronRight,
+  Truck,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-
+import PrimaryButton from './PrimaryButton';
+import Badge from './Badge';
 interface TripManagementViewProps {
   trips: Trip[];
   vehicles: Vehicle[];
@@ -202,18 +206,21 @@ export default function TripManagementView({
 
   const canManage = userRole === 'FleetManager' || userRole === 'Driver';
 
+  // Trip stages for visualization
+  const tripStages = ['Draft', 'Assigned', 'Dispatched', 'Completed'];
+
   return (
     <div className="space-y-6">
-      {/* Search and Filters Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      {/* Search and Filter Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 tp-card p-4 rounded-xl shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
           <input
             type="text"
-            placeholder="Search dispatches by location, vehicle, driver or route..."
+            placeholder="Search by route, vehicle, or driver..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500"
+            className="tp-search pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400"
           />
         </div>
 
@@ -225,170 +232,244 @@ export default function TripManagementView({
           >
             <option value="All">All Trip States</option>
             <option value="Draft">Draft</option>
-            <option value="Dispatched">Dispatched (On Trip)</option>
+            <option value="Dispatched">Dispatched</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
 
-          {canManage ? (
-            <button
-              onClick={handleOpenCreate}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs cursor-pointer"
-            >
+          {canManage && (
+            <PrimaryButton onClick={handleOpenCreate} className="flex items-center gap-1.5 text-xs">
               <Plus className="h-4 w-4" />
-              Plan New Dispatch
-            </button>
-          ) : (
-            <span className="text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded-lg flex items-center gap-1.5 font-medium">
-              <Info className="h-3.5 w-3.5" />
-              Driver/Manager-Only Trip Planning
-            </span>
+              Plan Dispatch
+            </PrimaryButton>
           )}
         </div>
       </div>
 
-      {/* Trips List/Table View */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-                <th className="px-6 py-4">Trip ID</th>
-                <th className="px-6 py-4">Route</th>
-                <th className="px-6 py-4">Assigned Vehicle</th>
-                <th className="px-6 py-4">Assigned Driver</th>
-                <th className="px-6 py-4 text-right">Specs (kg/km)</th>
-                <th className="px-6 py-4 text-right">Revenue</th>
-                <th className="px-6 py-4 text-center">Status</th>
-                {canManage && <th className="px-6 py-4 text-right">Actions</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-              {filteredTrips.map((trip) => {
-                const vehicleObj = vehicles.find(v => v.registrationNumber === trip.vehicleId);
-                const driverObj = drivers.find(d => d.licenseNumber === trip.driverId);
+      {/* Two Column Layout: Form + Live Board */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT: Trip Creation Form */}
+        {canManage && (
+          <div className="lg:col-span-1">
+            <div className="tp-card rounded-xl shadow-xs p-6 space-y-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Truck className="h-4 w-4 text-indigo-500" />
+                Plan Dispatch
+              </h3>
 
-                let statusBadge = 'bg-slate-100 text-slate-800';
-                if (trip.status === 'Draft') statusBadge = 'bg-slate-100 text-slate-600 border border-slate-200';
-                if (trip.status === 'Dispatched') statusBadge = 'bg-blue-50 text-blue-700 border border-blue-100';
-                if (trip.status === 'Completed') statusBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-100';
-                if (trip.status === 'Cancelled') statusBadge = 'bg-rose-50 text-rose-700 border border-rose-100';
-
-                return (
-                  <tr key={trip.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-bold text-slate-900">{trip.id}</td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-1 font-bold text-slate-800">
-                          <MapPin className="h-3 w-3 text-emerald-500" />
-                          <span>{trip.source}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                          <Navigation className="h-3 w-3 text-indigo-400" />
-                          <span>{trip.destination}</span>
-                        </div>
+              {/* Trip Stages */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">Trip Stages</label>
+                <div className="flex items-center justify-between text-xs">
+                  {tripStages.map((stage, idx) => (
+                    <div key={idx} className="flex flex-col items-center gap-1 flex-1">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                        idx === 0 ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {idx + 1}
                       </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {vehicleObj ? (
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-slate-800 truncate block max-w-[140px]">{vehicleObj.name}</span>
-                          <span className="font-mono text-[10px] text-slate-400">{vehicleObj.registrationNumber}</span>
-                        </div>
-                      ) : (
-                        <span className="text-rose-500 font-bold">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {driverObj ? (
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-slate-800">{driverObj.name}</span>
-                          <span className="font-mono text-[10px] text-slate-400">{driverObj.licenseNumber}</span>
-                        </div>
-                      ) : (
-                        <span className="text-rose-500 font-bold">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="space-y-0.5 font-mono">
-                        <span className="font-bold block">{(trip.cargoWeight).toLocaleString()} kg</span>
-                        <span className="text-slate-400">{(trip.plannedDistance).toLocaleString()} km</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono font-bold text-slate-800">
-                      ${(trip.revenue).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold inline-block ${statusBadge}`}>
-                        {trip.status}
-                      </span>
-                    </td>
-                    {canManage && (
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {trip.status === 'Draft' && (
-                            <>
-                              <button
-                                onClick={() => onDispatchTrip(trip.id)}
-                                className="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg flex items-center gap-1 font-bold cursor-pointer transition-all text-[11px]"
-                                title="Dispatch Trip"
-                              >
-                                <Send className="h-3.5 w-3.5" />
-                                <span>Dispatch</span>
-                              </button>
-                              <button
-                                onClick={() => onCancelTrip(trip.id)}
-                                className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg flex items-center gap-1 font-bold cursor-pointer transition-all text-[11px]"
-                                title="Cancel Dispatch"
-                              >
-                                <XSquare className="h-3.5 w-3.5" />
-                                <span>Cancel</span>
-                              </button>
-                            </>
-                          )}
+                      <span className="text-[10px] text-slate-600 text-center">{stage}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-[10px] text-slate-400 bg-slate-50 p-2 rounded border border-slate-200">
+                  Complete steps: Select vehicle, assign driver, dispatch, and mark complete.
+                </div>
+              </div>
 
-                          {trip.status === 'Dispatched' && (
-                            <>
-                              <button
-                                onClick={() => handleOpenComplete(trip)}
-                                className="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg flex items-center gap-1 font-bold cursor-pointer transition-all text-[11px]"
-                                title="Log completion statistics"
-                              >
-                                <CheckSquare className="h-3.5 w-3.5" />
-                                <span>Complete</span>
-                              </button>
-                              <button
-                                onClick={() => onCancelTrip(trip.id)}
-                                className="px-2.5 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg flex items-center gap-1 font-bold cursor-pointer transition-all text-[11px]"
-                                title="Cancel Dispatch"
-                              >
-                                <XSquare className="h-3.5 w-3.5" />
-                                <span>Cancel</span>
-                              </button>
-                            </>
-                          )}
+              {/* Quick Form */}
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">From</label>
+                  <input
+                    type="text"
+                    placeholder="Origin city"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                    onClick={() => handleOpenCreate()}
+                  />
+                </div>
 
-                          {(trip.status === 'Completed' || trip.status === 'Cancelled') && (
-                            <span className="text-[10px] text-slate-400 font-semibold italic">Archived</span>
-                          )}
-                        </div>
-                      </td>
-                    )}
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">To</label>
+                  <input
+                    type="text"
+                    placeholder="Destination city"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                    onClick={() => handleOpenCreate()}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Vehicle</label>
+                  <select className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500 bg-white" onClick={() => handleOpenCreate()}>
+                    <option>Select vehicle...</option>
+                    {availableVehicles.map(v => (
+                      <option key={v.registrationNumber} value={v.registrationNumber}>
+                        {v.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">Driver</label>
+                  <select className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500 bg-white" onClick={() => handleOpenCreate()}>
+                    <option>Select driver...</option>
+                    {availableDrivers.map(d => (
+                      <option key={d.licenseNumber} value={d.licenseNumber}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <PrimaryButton className="w-full text-xs justify-center" onClick={handleOpenCreate}>
+                  <Plus className="h-3.5 w-3.5" />
+                  Full Dispatch Form
+                </PrimaryButton>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RIGHT: Live Board / Trips Table */}
+        <div className={canManage ? 'lg:col-span-2' : 'lg:col-span-3'}>
+          <div className="tp-card rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Navigation className="h-4 w-4 text-indigo-500" />
+                Live Board
+              </h3>
+              <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                {filteredTrips.length} trips
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Route</th>
+                    <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Vehicle</th>
+                    <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Driver</th>
+                    <th className="px-4 py-3 text-right font-bold text-slate-600 uppercase text-xs tracking-wide">Specs</th>
+                    <th className="px-4 py-3 text-center font-bold text-slate-600 uppercase text-xs tracking-wide">Status</th>
+                    {canManage && <th className="px-4 py-3 text-center font-bold text-slate-600 uppercase text-xs tracking-wide">Actions</th>}
                   </tr>
-                );
-              })}
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredTrips.map((trip) => {
+                    const vehicleObj = vehicles.find(v => v.registrationNumber === trip.vehicleId);
+                    const driverObj = drivers.find(d => d.licenseNumber === trip.driverId);
 
-              {filteredTrips.length === 0 && (
-                <tr>
-                  <td colSpan={canManage ? 8 : 7} className="text-center py-10 text-slate-400">
-                    <Navigation className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                    <p className="font-bold">No dispatches found</p>
-                    <p className="text-[11px] mt-0.5">Clear search filters or register a new trip plan.</p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    let statusVariant: 'available' | 'ontrip' | 'offduty' | 'suspended' | 'default' = 'default';
+                    if (trip.status === 'Draft') statusVariant = 'offduty';
+                    if (trip.status === 'Dispatched') statusVariant = 'ontrip';
+                    if (trip.status === 'Completed') statusVariant = 'available';
+                    if (trip.status === 'Cancelled') statusVariant = 'suspended';
+
+                    return (
+                      <motion.tr
+                        key={trip.id}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
+                        <td className="px-4 py-4">
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-slate-800">{trip.id}</div>
+                            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                              <MapPin className="h-3 w-3" />
+                              {trip.source} <ChevronRight className="h-3 w-3" /> {trip.destination}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          {vehicleObj ? (
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-slate-800">{vehicleObj.name}</span>
+                              <span className="text-[10px] font-mono text-slate-400">{vehicleObj.registrationNumber}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-rose-600 font-bold">Unassigned</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {driverObj ? (
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-slate-800">{driverObj.name}</span>
+                              <span className="text-[10px] font-mono text-slate-400">{driverObj.licenseNumber}</span>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] text-rose-600 font-bold">Unassigned</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <div className="text-xs font-mono font-bold text-slate-800">
+                            {trip.cargoWeight}kg / {trip.plannedDistance}km
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <Badge variant={statusVariant}>{trip.status}</Badge>
+                        </td>
+                        {canManage && (
+                          <td className="px-4 py-4 text-center">
+                            <div className="flex justify-center gap-1">
+                              {trip.status === 'Draft' && (
+                                <>
+                                  <button
+                                    onClick={() => onDispatchTrip(trip.id)}
+                                    className="p-1.5 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors"
+                                    title="Dispatch"
+                                  >
+                                    <Send className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => onCancelTrip(trip.id)}
+                                    className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors"
+                                    title="Cancel"
+                                  >
+                                    <XSquare className="h-4 w-4" />
+                                  </button>
+                                </>
+                              )}
+
+                              {trip.status === 'Dispatched' && (
+                                <>
+                                  <button
+                                    onClick={() => handleOpenComplete(trip)}
+                                    className="p-1.5 hover:bg-emerald-100 text-emerald-600 rounded-lg transition-colors"
+                                    title="Complete"
+                                  >
+                                    <CheckSquare className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => onCancelTrip(trip.id)}
+                                    className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors"
+                                    title="Cancel"
+                                  >
+                                    <XSquare className="h-4 w-4" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                      </motion.tr>
+                    );
+                  })}
+
+                  {filteredTrips.length === 0 && (
+                    <tr>
+                      <td colSpan={canManage ? 6 : 5} className="text-center py-8">
+                        <Navigation className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-500 font-bold">No trips found</p>
+                        <p className="text-slate-400 text-xs mt-1">Create a new dispatch plan to get started.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 

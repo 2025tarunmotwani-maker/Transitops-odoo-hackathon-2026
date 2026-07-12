@@ -11,9 +11,12 @@ import {
   Sparkles,
   Play,
   FileText,
-  Info
+  Info,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import PrimaryButton from './shared/PrimaryButton';
+import Badge from './shared/Badge';
 
 interface MaintenanceViewProps {
   maintenanceLogs: MaintenanceLog[];
@@ -136,22 +139,28 @@ export default function MaintenanceView({
 
   const canManage = userRole === 'FleetManager';
 
+  // Get vehicle statuses for display
+  const getVehicleStatus = (vehicleId: string) => {
+    const vObj = vehicles.find(v => v.registrationNumber === vehicleId);
+    return vObj?.status || 'Unknown';
+  };
+
   return (
     <div className="space-y-6">
-      {/* Top action bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+      {/* Search and Filter Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 tp-card p-4 rounded-xl shadow-xs">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
           <input
             type="text"
-            placeholder="Search logs by vehicle, issue or tech notes..."
+            placeholder="Search maintenance logs..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500"
+            className="tp-search pl-9 pr-4 py-2 text-sm text-slate-800 placeholder-slate-400"
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as any)}
@@ -162,119 +171,198 @@ export default function MaintenanceView({
             <option value="Closed">Closed & Completed</option>
           </select>
 
-          {canManage ? (
-            <button
-              onClick={handleOpenCreate}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs cursor-pointer"
-            >
+          {canManage && (
+            <PrimaryButton onClick={handleOpenCreate} className="flex items-center gap-1.5 text-xs">
               <Plus className="h-4 w-4" />
               File Shop Entry
-            </button>
-          ) : (
-            <span className="text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded-lg flex items-center gap-1.5 font-medium">
-              <Info className="h-3.5 w-3.5" />
-              Manager-Only Workshop Control
-            </span>
+            </PrimaryButton>
           )}
         </div>
       </div>
 
-      {/* Grid representation */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLogs.map((log) => {
-          const vObj = vehicles.find(v => v.registrationNumber === log.vehicleId);
-          const isOpen = log.status === 'Open';
+      {/* Two Column Layout: Form + Service Log */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT: Maintenance Form */}
+        {canManage && (
+          <div className="lg:col-span-1">
+            <div className="tp-card rounded-xl shadow-xs p-6 space-y-4">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-indigo-500" />
+                Vehicle Record
+              </h3>
 
-          return (
-            <motion.div
-              layout
-              key={log.id}
-              className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow duration-250 flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-extrabold bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-sm">
-                      {log.id}
-                    </span>
-                    <span className="font-mono text-xs font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-sm">
-                      {log.vehicleId}
-                    </span>
-                  </div>
-                  <h4 className="text-sm font-extrabold text-slate-800 truncate max-w-[170px]" title={vObj?.name}>
-                    {vObj?.name || 'Unknown Vehicle'}
-                  </h4>
-                </div>
-
-                <span className={`text-[11px] px-2.5 py-1 rounded-full font-bold border ${isOpen ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
-                  {isOpen ? 'In Repair' : 'Completed'}
-                </span>
-              </div>
-
-              {/* Specs body */}
-              <div className="p-5 space-y-4 flex-1 text-xs font-medium text-slate-600">
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">Reported Issue</span>
-                  <p className="text-slate-800 font-bold text-xs">{log.issue}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wide flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" /> Start Date
-                    </span>
-                    <p className="text-slate-700 font-bold mt-0.5">{log.startDate}</p>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wide flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5 text-slate-400" /> End Date
-                    </span>
-                    <p className="text-slate-700 font-bold mt-0.5">{log.endDate || 'Active Shop'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide flex items-center gap-1">
-                    <FileText className="h-3.5 w-3.5 text-slate-400" /> Diagnostic Notes
+              {/* Quick Status Indicators */}
+              <div className="space-y-2 pb-4 border-b border-slate-200">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">Fleet Status</label>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full font-bold">
+                    Available
                   </span>
-                  <p className="text-slate-600 text-xs italic bg-slate-50 p-2.5 rounded-lg border border-slate-150">
-                    {log.notes || 'No notes on file.'}
-                  </p>
-                </div>
-
-                <div className="flex justify-between items-center pt-3 border-t border-slate-100">
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">Repair Invoiced</span>
-                  <span className="text-base font-extrabold text-slate-800 font-mono">
-                    ${(log.cost).toLocaleString()}
+                  <span className="text-slate-400">→</span>
+                  <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-700 rounded-full font-bold">
+                    In Shop
                   </span>
+                </div>
+                <div className="text-[10px] text-slate-400 bg-slate-50 p-2 rounded border border-slate-200">
+                  Scheduled service is dispatcher-controlled only.
                 </div>
               </div>
 
-              {/* Actions Footer */}
-              {canManage && isOpen && (
-                <div className="px-5 py-3.5 bg-slate-50/50 border-t border-slate-100 flex justify-end text-xs">
-                  <button
-                    onClick={() => handleOpenClose(log)}
-                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Complete Repairs</span>
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
+              {/* Vehicle Selection */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Vehicle</label>
+                <select 
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500 bg-white"
+                  onClick={() => handleOpenCreate()}
+                >
+                  <option>Select vehicle...</option>
+                  {eligibleVehicles.map(v => (
+                    <option key={v.registrationNumber} value={v.registrationNumber}>
+                      {v.name} ({v.registrationNumber})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        {filteredLogs.length === 0 && (
-          <div className="col-span-full py-12 bg-white rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
-            <Wrench className="h-12 w-12 text-slate-300 mb-3" />
-            <p className="text-slate-500 font-bold">No maintenance logs found</p>
-            <p className="text-slate-400 text-xs mt-1">Try relaxing search parameters or filters.</p>
+              {/* Issue Description */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Issue</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Oil Change"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                  onClick={() => handleOpenCreate()}
+                />
+              </div>
+
+              {/* Cost Estimate */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Cost (USD)</label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                  onClick={() => handleOpenCreate()}
+                />
+              </div>
+
+              {/* Start Date */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Date</label>
+                <input
+                  type="date"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                  onClick={() => handleOpenCreate()}
+                />
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Notes</label>
+                <textarea
+                  placeholder="Add notes..."
+                  rows={2}
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                  onClick={() => handleOpenCreate()}
+                />
+              </div>
+
+              <PrimaryButton className="w-full text-xs justify-center" onClick={handleOpenCreate}>
+                <Plus className="h-3.5 w-3.5" />
+                Submit
+              </PrimaryButton>
+            </div>
           </div>
         )}
+
+        {/* RIGHT: Service Log Table */}
+        <div className={canManage ? 'lg:col-span-2' : 'lg:col-span-3'}>
+          <div className="tp-card rounded-xl shadow-xs overflow-hidden">
+            <div className="bg-slate-50 border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-indigo-500" />
+                Service Log
+              </h3>
+              <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-full border border-slate-200">
+                {filteredLogs.length} entries
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Service #</th>
+                    <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Vehicle ID</th>
+                    <th className="px-4 py-3 text-left font-bold text-slate-600 uppercase text-xs tracking-wide">Vendor / Service</th>
+                    <th className="px-4 py-3 text-right font-bold text-slate-600 uppercase text-xs tracking-wide">Cost</th>
+                    <th className="px-4 py-3 text-center font-bold text-slate-600 uppercase text-xs tracking-wide">Status</th>
+                    {canManage && <th className="px-4 py-3 text-center font-bold text-slate-600 uppercase text-xs tracking-wide">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredLogs.map((log) => {
+                    const vObj = vehicles.find(v => v.registrationNumber === log.vehicleId);
+                    let statusVariant: 'available' | 'ontrip' | 'offduty' | 'suspended' | 'default' = 'default';
+                    
+                    if (log.status === 'Open') statusVariant = 'ontrip';
+                    if (log.status === 'Closed') statusVariant = 'available';
+
+                    return (
+                      <motion.tr
+                        key={log.id}
+                        className="hover:bg-slate-50/50 transition-colors"
+                      >
+                        <td className="px-4 py-4 font-mono font-bold text-slate-800 text-sm">{log.id}</td>
+                        <td className="px-4 py-4 font-bold text-slate-800">{log.vehicleId}</td>
+                        <td className="px-4 py-4">
+                          <div className="space-y-0.5">
+                            <div className="text-xs font-bold text-slate-800">{vObj?.name || 'Unknown'}</div>
+                            <div className="text-[10px] text-slate-500">{log.issue}</div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          <span className="font-mono font-bold text-slate-800">${(log.cost).toLocaleString()}</span>
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <Badge variant={statusVariant}>
+                            {log.status === 'Open' ? 'In Shop' : 'Completed'}
+                          </Badge>
+                        </td>
+                        {canManage && (
+                          <td className="px-4 py-4 text-center">
+                            {log.status === 'Open' && (
+                              <button
+                                onClick={() => handleOpenClose(log)}
+                                className="p-1.5 hover:bg-emerald-100 text-emerald-600 rounded-lg transition-colors"
+                                title="Complete Repairs"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                              </button>
+                            )}
+                            {log.status === 'Closed' && (
+                              <span className="text-[10px] text-slate-400 font-semibold">Archived</span>
+                            )}
+                          </td>
+                        )}
+                      </motion.tr>
+                    );
+                  })}
+
+                  {filteredLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={canManage ? 6 : 5} className="text-center py-8">
+                        <Wrench className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                        <p className="text-slate-500 font-bold">No maintenance logs found</p>
+                        <p className="text-slate-400 text-xs mt-1">File a new shop entry to get started.</p>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* CREATE MAINTENANCE DIALOG */}

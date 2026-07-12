@@ -190,215 +190,103 @@ export default function ExpensesView({
   );
 
   return (
-    <div className="space-y-6">
-      {/* Sub Tabs Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-1">
-        <div className="flex gap-2 bg-slate-100 p-1 rounded-lg">
-          <button
-            onClick={() => { setActiveTab('fuel'); setSearchTerm(''); }}
-            className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-1.5 cursor-pointer transition-colors ${activeTab === 'fuel' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-800'}`}
-          >
-            <Flame className="h-4 w-4" />
-            Fuel Logs
-          </button>
-          <button
-            onClick={() => { setActiveTab('expenses'); setSearchTerm(''); }}
-            className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-1.5 cursor-pointer transition-colors ${activeTab === 'expenses' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-800'}`}
-          >
-            <Receipt className="h-4 w-4" />
-            General Expenses
-          </button>
-          <button
-            onClick={() => { setActiveTab('aggregator'); setSearchTerm(''); }}
-            className={`px-4 py-2 text-xs font-bold rounded-md flex items-center gap-1.5 cursor-pointer transition-colors ${activeTab === 'aggregator' ? 'bg-white text-indigo-600 shadow-xs' : 'text-slate-600 hover:text-slate-800'}`}
-          >
-            <Calculator className="h-4 w-4" />
-            Cost Aggregator
-          </button>
-        </div>
-
-        {canManage ? (
-          <div className="flex gap-2">
-            {activeTab === 'fuel' && (
-              <button
-                onClick={handleOpenFuel}
-                className="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                Log Fuel Receipt
-              </button>
-            )}
-            {activeTab === 'expenses' && (
-              <button
-                onClick={handleOpenExpense}
-                className="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-                Register Expense
-              </button>
-            )}
-          </div>
-        ) : (
-          <span className="text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded-lg flex items-center gap-1.5 font-medium">
-            <Info className="h-3.5 w-3.5" />
-            Manager/Analyst-Only Expense Actions
-          </span>
-        )}
-      </div>
-
-      {/* SEARCH OR SEARCH PLACEHOLDER FOR AGGREGATOR */}
-      {activeTab !== 'aggregator' && (
-        <div className="relative max-w-md">
-          <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
+      {/* Top row: search + actions */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="relative w-1/3">
+          <Search className="absolute left-3 top-3 text-zinc-500" />
           <input
             type="text"
-            placeholder={`Search ${activeTab === 'fuel' ? 'fuel logs' : 'operating expenses'}...`}
+            placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500 bg-white"
+            className="w-full pl-10 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 placeholder-zinc-500"
           />
         </div>
-      )}
 
-      {/* FUEL LOGS TAB CONTENT */}
-      {activeTab === 'fuel' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <div className="flex items-center gap-3">
+          <button onClick={handleOpenFuel} className="px-4 py-2 bg-amber-500 text-zinc-950 rounded-md font-semibold">+ Log Fuel</button>
+          <button onClick={handleOpenExpense} className="px-4 py-2 bg-amber-500 text-zinc-950 rounded-md font-semibold">+ Add Expense</button>
+        </div>
+      </div>
+
+      {/* Fuel Logs table */}
+      <div className="mb-8">
+        <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-3">Fuel Logs</h3>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Receipt ID</th>
-                  <th className="px-6 py-4">Vehicle Plate</th>
-                  <th className="px-6 py-4">Refuel Date</th>
-                  <th className="px-6 py-4 text-right">Liters Logged</th>
-                  <th className="px-6 py-4 text-right">Odometer (km)</th>
-                  <th className="px-6 py-4 text-right">Total Cost</th>
+                <tr className="text-zinc-400 text-xs uppercase tracking-wider border-b border-zinc-800">
+                  <th className="px-6 py-3">Vehicle</th>
+                  <th className="px-6 py-3">Date</th>
+                  <th className="px-6 py-3 text-right">Liters</th>
+                  <th className="px-6 py-3 text-right">Total Cost</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {filteredFuel.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-bold text-slate-900">{log.id}</td>
-                    <td className="px-6 py-4 font-mono font-bold text-indigo-700">{log.vehicleId}</td>
-                    <td className="px-6 py-4">{log.date}</td>
-                    <td className="px-6 py-4 text-right font-mono font-bold">{log.liters} L</td>
-                    <td className="px-6 py-4 text-right font-mono">{(log.odometer).toLocaleString()} km</td>
-                    <td className="px-6 py-4 text-right font-mono font-extrabold text-slate-800">${(log.cost).toLocaleString()}</td>
+              <tbody>
+                {filteredFuel.map(f => (
+                  <tr key={f.id} className="border-b border-zinc-800">
+                    <td className="px-6 py-3 font-mono text-zinc-200">{f.vehicleId}</td>
+                    <td className="px-6 py-3 text-zinc-400">{f.date}</td>
+                    <td className="px-6 py-3 text-right font-mono">{f.liters} L</td>
+                    <td className="px-6 py-3 text-right font-mono text-zinc-200">${f.cost.toLocaleString()}</td>
                   </tr>
                 ))}
                 {filteredFuel.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-10 text-slate-400">
-                      <Flame className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                      No refuel receipts found.
-                    </td>
+                    <td colSpan={4} className="py-8 text-center text-zinc-500">No fuel logs</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* EXPENSES TAB CONTENT */}
-      {activeTab === 'expenses' && (
-        <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+      {/* Other Expenses table */}
+      <div className="mb-6">
+        <h3 className="text-sm uppercase tracking-wider text-zinc-400 mb-3">Other Expenses (Toll / Misc)</h3>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-                  <th className="px-6 py-4">Expense ID</th>
-                  <th className="px-6 py-4">Vehicle Plate</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Incurred Date</th>
-                  <th className="px-6 py-4">Description</th>
-                  <th className="px-6 py-4 text-right">Invoiced Cost</th>
+                <tr className="text-zinc-400 text-xs uppercase tracking-wider border-b border-zinc-800">
+                  <th className="px-6 py-3">Trip</th>
+                  <th className="px-6 py-3">Vehicle</th>
+                  <th className="px-6 py-3">Toll</th>
+                  <th className="px-6 py-3">Other</th>
+                  <th className="px-6 py-3">Maint. (Linked)</th>
+                  <th className="px-6 py-3">Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {filteredExpenses.map((exp) => {
-                  let catColor = 'bg-slate-100 text-slate-700';
-                  if (exp.category === 'Toll') catColor = 'bg-blue-50 text-blue-700 border border-blue-100';
-                  if (exp.category === 'Permit') catColor = 'bg-purple-50 text-purple-700 border border-purple-100';
-                  if (exp.category === 'Insurance') catColor = 'bg-cyan-50 text-cyan-700 border border-cyan-100';
-                  if (exp.category === 'Fines') catColor = 'bg-rose-50 text-rose-700 border border-rose-100';
-
-                  return (
-                    <tr key={exp.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-slate-900">{exp.id}</td>
-                      <td className="px-6 py-4 font-mono font-bold text-indigo-700">{exp.vehicleId}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${catColor}`}>
-                          {exp.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">{exp.date}</td>
-                      <td className="px-6 py-4 text-slate-600 truncate max-w-sm">{exp.description}</td>
-                      <td className="px-6 py-4 text-right font-mono font-extrabold text-slate-800">
-                        ${(exp.cost).toLocaleString()}
-                      </td>
-                    </tr>
-                  );
-                })}
+              <tbody>
+                {filteredExpenses.map(e => (
+                  <tr key={e.id} className="border-b border-zinc-800">
+                    <td className="px-6 py-3 font-mono text-zinc-200">{e.id}</td>
+                    <td className="px-6 py-3 text-zinc-300">{e.vehicleId}</td>
+                    <td className="px-6 py-3">{e.category === 'Toll' ? e.cost : 0}</td>
+                    <td className="px-6 py-3">{e.category === 'Other' ? e.cost : 0}</td>
+                    <td className="px-6 py-3">{maintenanceLogs.filter(m=>m.vehicleId===e.vehicleId).reduce((s,m)=>s+m.cost,0)}</td>
+                    <td className="px-6 py-3">${e.cost.toLocaleString()}</td>
+                  </tr>
+                ))}
                 {filteredExpenses.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-10 text-slate-400">
-                      <Receipt className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                      No expense logs registered.
-                    </td>
+                    <td colSpan={6} className="py-8 text-center text-zinc-500">No other expenses</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* AGGREGATOR TAB CONTENT */}
-      {activeTab === 'aggregator' && (
-        <div className="space-y-4">
-          <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 text-indigo-800 text-xs font-semibold leading-relaxed">
-            <TrendingDown className="h-5 w-5 shrink-0 text-indigo-600" />
-            <div>
-              <p className="font-bold text-indigo-900">Aggregate Operational Cost computation</p>
-              <p className="font-medium mt-0.5 opacity-90">
-                Operational cost represents the combined sum of logged Refueling + In-Shop Workshop Overhauls + Miscellaneous Tolls/Permits/Fees associated with each distinct plate registry.
-              </p>
-            </div>
-          </div>
+      <div className="flex justify-end items-center">
+        <div className="text-sm text-amber-400 font-bold">{aggregatedCosts.reduce((s,a)=>s+a.total,0).toLocaleString()}</div>
+      </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-                    <th className="px-6 py-4">Vehicle Plate</th>
-                    <th className="px-6 py-4">Name / Model</th>
-                    <th className="px-6 py-4 text-right">Fuel Expenses</th>
-                    <th className="px-6 py-4 text-right">Maintenance Workshop</th>
-                    <th className="px-6 py-4 text-right">Tolls & Permits</th>
-                    <th className="px-6 py-4 text-right bg-slate-50 border-l border-slate-200 font-extrabold text-indigo-700">Total Operational Cost</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                  {aggregatedCosts.map((agg) => (
-                    <tr key={agg.registrationNumber} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-indigo-700">{agg.registrationNumber}</td>
-                      <td className="px-6 py-4 font-bold text-slate-800">{agg.name}</td>
-                      <td className="px-6 py-4 text-right font-mono">${(agg.fuelCost).toLocaleString()}</td>
-                      <td className="px-6 py-4 text-right font-mono">${(agg.maintCost).toLocaleString()}</td>
-                      <td className="px-6 py-4 text-right font-mono">${(agg.otherCost).toLocaleString()}</td>
-                      <td className="px-6 py-4 text-right bg-indigo-50/20 border-l border-slate-200 font-mono font-black text-slate-900">
-                        ${(agg.total).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modals (restyled dark) */}
 
       {/* FUEL DIALOG */}
       <AnimatePresence>
