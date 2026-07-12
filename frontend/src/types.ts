@@ -6,6 +6,12 @@ export interface User {
   role: Role;
 }
 
+export interface AppSettings {
+  depotName: string;
+  currency: string;
+  distanceUnit: string;
+}
+
 export type VehicleType = 'Semi-Truck' | 'Heavy Duty' | 'Delivery Van' | 'EV Cargo' | 'Support Sedan';
 export type VehicleStatus = 'Available' | 'On Trip' | 'In Shop' | 'Retired';
 

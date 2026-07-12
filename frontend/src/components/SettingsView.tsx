@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { ShieldCheck, Search, Save, CheckCircle2, Minus } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ShieldCheck, Search, Save, CheckCircle2 } from 'lucide-react';
+import { AppSettings } from '../types';
 
 const roles = [
   { role: 'Fleet Manager', fleet: '✓', drivers: '✓', trips: '✓', fuelExp: '✓', analytics: '✓' },
@@ -8,14 +9,31 @@ const roles = [
   { role: 'Financial Analyst', fleet: 'View', drivers: '–', trips: '–', fuelExp: '✓', analytics: '✓' }
 ];
 
-export default function SettingsView() {
-  const [depotName, setDepotName] = useState('Gandhinagar Depot GJ-4');
-  const [currency, setCurrency] = useState('INR (Rs)');
-  const [distanceUnit, setDistanceUnit] = useState('Kilometres');
+interface SettingsViewProps {
+  settings: AppSettings;
+  onSaveSettings: (settings: AppSettings) => void;
+}
+
+export default function SettingsView({ settings, onSaveSettings }: SettingsViewProps) {
+  const [depotName, setDepotName] = useState(settings.depotName);
+  const [currency, setCurrency] = useState(settings.currency);
+  const [distanceUnit, setDistanceUnit] = useState(settings.distanceUnit);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setDepotName(settings.depotName);
+    setCurrency(settings.currency);
+    setDistanceUnit(settings.distanceUnit);
+  }, [settings]);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
+    const updatedSettings: AppSettings = {
+      depotName,
+      currency,
+      distanceUnit
+    };
+    onSaveSettings(updatedSettings);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1800);
   };

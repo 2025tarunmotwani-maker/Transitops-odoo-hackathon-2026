@@ -2,6 +2,8 @@ const express = require("express");
 
 const authRoutes = require("./routes/authRoutes");
 const vehicleRoutes = require("./routes/vehicleRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
+const costRoutes = require("./routes/costRoutes");
 
 function createServerApplication() {
     const app = express();
@@ -28,6 +30,8 @@ function createServerApplication() {
 
     app.use("/api/auth", authRoutes);
     app.use("/api/vehicles", vehicleRoutes);
+    app.use("/api/settings", settingsRoutes);
+    app.use("/api/costs", costRoutes);
 
     return app;
 }

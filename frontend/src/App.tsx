@@ -8,13 +8,16 @@ import {
   FuelLog, 
   Expense, 
   SystemNotification,
-  Role
+  Role,
+  AppSettings
 } from './types';
 import { 
   loadInitialState, 
   saveState, 
   generateSystemNotifications 
 } from './data/db';
+import { fetchSettings, saveSettingsApi } from './api/settingsApi';
+import { fetchFuelLogs, fetchExpenses, createFuelLogApi, createExpenseApi } from './api/costApi';
 import LoginScreen from './components/LoginScreen';
 import DashboardView from './components/DashboardView';
 import VehicleRegistryView from './components/VehicleRegistryView';
@@ -70,6 +73,36 @@ export default function App() {
       console.error(e);
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    let canceled = false;
+
+    async function loadServerState() {
+      try {
+        const [serverSettings, serverFuel, serverExpenses] = await Promise.all([
+          fetchSettings(),
+          fetchFuelLogs(),
+          fetchExpenses()
+        ]);
+
+        if (!canceled) {
+          updateState({
+            settings: serverSettings,
+            fuelLogs: serverFuel,
+            expenses: serverExpenses
+          });
+        }
+      } catch (error) {
+        console.error("Unable to load data from server:", error);
+      }
+    }
+
+    loadServerState();
+
+    return () => {
+      canceled = true;
+    };
+  }, []);
 
   // Sync state changes with localStorage
   const updateState = (updates: Partial<typeof state>) => {
@@ -322,14 +355,37 @@ export default function App() {
   };
 
   // COST LOGS WORKFLOWS
-  const handleAddFuelLog = (newFuelLog: FuelLog) => {
-    const updated = [newFuelLog, ...state.fuelLogs];
-    updateState({ fuelLogs: updated });
+  const handleAddFuelLog = async (newFuelLog: FuelLog) => {
+    try {
+      const savedFuel = await createFuelLogApi(newFuelLog);
+      updateState({ fuelLogs: [savedFuel, ...state.fuelLogs] });
+    } catch (error) {
+      console.error("Failed to save fuel log to database:", error);
+      const updated = [newFuelLog, ...state.fuelLogs];
+      updateState({ fuelLogs: updated });
+    }
   };
 
-  const handleAddExpense = (newExpense: Expense) => {
-    const updated = [newExpense, ...state.expenses];
-    updateState({ expenses: updated });
+  const handleAddExpense = async (newExpense: Expense) => {
+    try {
+      const savedExpense = await createExpenseApi(newExpense);
+      updateState({ expenses: [savedExpense, ...state.expenses] });
+    } catch (error) {
+      console.error("Failed to save expense to database:", error);
+      const updated = [newExpense, ...state.expenses];
+      updateState({ expenses: updated });
+    }
+  };
+
+  const handleSaveSettings = async (settings: AppSettings) => {
+    updateState({ settings });
+
+    try {
+      const savedSettings = await saveSettingsApi(settings);
+      updateState({ settings: savedSettings });
+    } catch (error) {
+      console.error("Failed to save settings to server:", error);
+    }
   };
 
   // Unauthenticated routing guards
@@ -691,7 +747,10 @@ export default function App() {
               )}
 
               {activeTab === 'settings' && (
-                <SettingsView />
+                <SettingsView
+                  settings={state.settings}
+                  onSaveSettings={handleSaveSettings}
+                />
               )}
             </motion.div>
           </AnimatePresence>

@@ -1,4 +1,4 @@
-import { Vehicle, Driver, Trip, MaintenanceLog, FuelLog, Expense, SystemNotification, User } from '../types';
+import { Vehicle, Driver, Trip, MaintenanceLog, FuelLog, Expense, SystemNotification, User, AppSettings } from '../types';
 import {
   SEED_VEHICLES,
   SEED_DRIVERS,
@@ -18,7 +18,14 @@ const KEYS = {
   FUEL: `${STORAGE_PREFIX}fuel`,
   EXPENSES: `${STORAGE_PREFIX}expenses`,
   CURRENT_USER: `${STORAGE_PREFIX}user`,
-  NOTIFICATIONS: `${STORAGE_PREFIX}notifications`
+  NOTIFICATIONS: `${STORAGE_PREFIX}notifications`,
+  SETTINGS: `${STORAGE_PREFIX}settings`
+};
+
+const DEFAULT_SETTINGS: AppSettings = {
+  depotName: 'Gandhinagar Depot GJ-4',
+  currency: 'INR (Rs)',
+  distanceUnit: 'Kilometres'
 };
 
 export interface TransitState {
@@ -30,6 +37,7 @@ export interface TransitState {
   expenses: Expense[];
   notifications: SystemNotification[];
   currentUser: User | null;
+  settings: AppSettings;
 }
 
 // Check driver license status and generate alerts
@@ -114,6 +122,7 @@ export function loadInitialState(): TransitState {
   const maintenanceLogs = getStorage<MaintenanceLog[]>(KEYS.MAINTENANCE, SEED_MAINTENANCE);
   const fuelLogs = getStorage<FuelLog[]>(KEYS.FUEL, SEED_FUEL_LOGS);
   const expenses = getStorage<Expense[]>(KEYS.EXPENSES, SEED_EXPENSES);
+  const settings = getStorage<AppSettings>(KEYS.SETTINGS, DEFAULT_SETTINGS);
   
   // Default login: FleetManager
   const currentUser = getStorage<User | null>(KEYS.CURRENT_USER, null);
@@ -136,7 +145,8 @@ export function loadInitialState(): TransitState {
     fuelLogs,
     expenses,
     notifications,
-    currentUser
+    currentUser,
+    settings
   };
 }
 
@@ -155,6 +165,7 @@ export function saveState(state: Partial<TransitState>) {
   if (state.maintenanceLogs) setStorage(KEYS.MAINTENANCE, state.maintenanceLogs);
   if (state.fuelLogs) setStorage(KEYS.FUEL, state.fuelLogs);
   if (state.expenses) setStorage(KEYS.EXPENSES, state.expenses);
+  if (state.settings) setStorage(KEYS.SETTINGS, state.settings);
   if (state.currentUser !== undefined) setStorage(KEYS.CURRENT_USER, state.currentUser);
   if (state.notifications) setStorage(KEYS.NOTIFICATIONS, state.notifications);
 }
