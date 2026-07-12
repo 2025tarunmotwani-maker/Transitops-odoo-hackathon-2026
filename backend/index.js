@@ -1,14 +1,13 @@
 const http = require("node:http");
 const dotenv = require("dotenv");
 
-const { createServerApplication } = require("./server.js");
-const connectDB = require("./db/connection.js");
+const { createServerApplication } = require("./server");
+const connectDB = require("./db/connection");
 
 dotenv.config();
 
 async function main() {
     try {
-        // Connect to MongoDB first
         await connectDB();
 
         const app = createServerApplication();

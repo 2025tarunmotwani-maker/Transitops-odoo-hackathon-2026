@@ -1,61 +1,58 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
-{
-    firstName: {
-        type: String,
-        required: true
-    },
+    {
+        firstName: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-    lastName: {
-        type: String,
-        required: true
-    },
+        lastName: {
+            type: String,
+            required: true,
+            trim: true,
+        },
 
-    email: {
-        type: String,
-        required: true,
-        unique: true
-    },
+        email: {
+            type: String,
+            required: true,
+            unique: true,
+            lowercase: true,
+            trim: true,
+        },
 
-    phone: {
-        type: String,
-        required: true
-    },
+        phone: {
+            type: String,
+            required: true,
+        },
 
-    password: {
-        type: String,
-        required: true
-    },
+        password: {
+            type: String,
+            required: true,
+        },
 
-    confirmPassword: {
-        type: String,
-        required: true
-    },
+        role: {
+            type: String,
+            enum: [
+                "Admin",
+                "Fleet Manager",
+                "Driver",
+                "Safety Officer",
+                "Financial Analyst",
+            ],
+            default: "Driver",
+        },
 
-    role: {
-        type: String,
-        enum: [
-            "Admin",
-            "Fleet Manager",
-            "Driver",
-            "Safety Officer",
-            "Financial Analyst"
-        ],
-        default: "Driver"
+        status: {
+            type: String,
+            enum: ["Active", "Inactive"],
+            default: "Active",
+        },
     },
-
-    status: {
-        type: String,
-        enum: ["Active", "Inactive"],
-        default: "Active"
+    {
+        timestamps: true,
     }
-},
-{
-    timestamps: true
-}
 );
 
-const User = mongoose.model("USER_COLLECTION", userSchema);
-
-module.exports = User;
+module.exports = mongoose.model("User", userSchema);
