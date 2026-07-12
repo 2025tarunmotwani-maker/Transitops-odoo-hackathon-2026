@@ -24,6 +24,7 @@ import MaintenanceView from './components/MaintenanceView';
 import ExpensesView from './components/ExpensesView';
 import ReportsView from './components/ReportsView';
 import DocumentsView from './components/DocumentsView';
+import SettingsView from './components/SettingsView';
 import { 
   Truck, 
   Users, 
@@ -348,6 +349,7 @@ export default function App() {
     { id: 'expenses', name: 'Cost Logs', icon: Calculator },
     { id: 'documents', name: 'Safety & Docs', icon: FileText },
     { id: 'reports', name: 'Executive Reports', icon: FileSpreadsheet },
+    { id: 'settings', name: 'Settings', icon: ShieldCheck },
   ];
 
   return (
@@ -686,6 +688,10 @@ export default function App() {
                   fuelLogs={state.fuelLogs}
                   expenses={state.expenses}
                 />
+              )}
+
+              {activeTab === 'settings' && (
+                <SettingsView />
               )}
             </motion.div>
           </AnimatePresence>
