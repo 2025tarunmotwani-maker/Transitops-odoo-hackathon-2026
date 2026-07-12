@@ -34,6 +34,7 @@ export default function VehicleRegistryView({
 }: VehicleRegistryViewProps) {
   // Search and Filter states
   const [searchTerm, setSearchTerm] = useState('');
+  const [regNoSearchTerm, setRegNoSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -153,37 +154,44 @@ export default function VehicleRegistryView({
 
   // Filter vehicles
   const filteredVehicles = vehicles.filter(v => {
-    const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          v.registrationNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRegNoSearch = v.registrationNumber.toLowerCase().includes(regNoSearchTerm.toLowerCase());
     const matchesType = typeFilter === 'All' || v.type === typeFilter;
     const matchesStatus = statusFilter === 'All' || v.status === statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesRegNoSearch && matchesType && matchesStatus;
   });
 
   const canManage = userRole === 'FleetManager';
 
   return (
-    <div className="space-y-6">
-      {/* Search and Filters Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
-          <input
-            type="text"
-            placeholder="Search vehicles by name or plate..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-indigo-500"
-          />
+    <div className="space-y-8 bg-[#181a1d] min-h-screen text-[#f0f1f4] p-8" style={{ fontFamily: 'handdrawnfont, cursive' }}>
+      <header className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">2. Vehicle Registry</h2>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9 pr-4 py-2 w-72 border border-slate-700 bg-black/40 rounded-full text-sm text-[#f0f1f4] placeholder-slate-500 focus:outline-hidden focus:border-indigo-600"
+            />
+          </div>
+          <span className="text-sm font-medium text-slate-300">Raven K.</span>
+          <span className="text-sm font-bold bg-[#142d54] text-blue-200 px-3 py-1 rounded-full">Dispatche <span className="text-xs">RK</span></span>
         </div>
+      </header>
 
-        <div className="flex flex-wrap items-center gap-3">
+      {/* Search and Filters Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#1e2226] p-4 rounded-xl border border-slate-800 shadow-xl">
+        <div className="flex flex-wrap items-center gap-3 flex-1">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-indigo-500 focus:outline-hidden"
+            className="bg-black/40 border border-slate-800 text-slate-300 rounded-lg px-4 py-2 text-sm font-medium focus:ring-1 focus:ring-indigo-600 focus:outline-hidden"
           >
-            <option value="All">All Types</option>
+            <option value="All">Type: All</option>
             <option value="Semi-Truck">Semi-Trucks</option>
             <option value="Heavy Duty">Heavy Duty</option>
             <option value="Delivery Van">Delivery Vans</option>
@@ -194,160 +202,139 @@ export default function VehicleRegistryView({
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-2 text-xs font-medium focus:ring-1 focus:ring-indigo-500 focus:outline-hidden"
+            className="bg-black/40 border border-slate-800 text-slate-300 rounded-lg px-4 py-2 text-sm font-medium focus:ring-1 focus:ring-indigo-600 focus:outline-hidden"
           >
-            <option value="All">All Statuses</option>
+            <option value="All">Status: All</option>
             <option value="Available">Available</option>
             <option value="On Trip">On Trip</option>
             <option value="In Shop">In Shop</option>
             <option value="Retired">Retired</option>
           </select>
 
-          {canManage ? (
-            <button
-              onClick={openAddForm}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-colors shadow-xs cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              Register Vehicle
-            </button>
-          ) : (
-            <span className="text-xs text-slate-400 bg-slate-100 px-3 py-2 rounded-lg flex items-center gap-1.5 font-medium">
-              <Info className="h-3.5 w-3.5" />
-              Manager-Only Registry Actions
-            </span>
-          )}
+          <div className="relative">
+            <Search className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 h-10 w-4.5" />
+            <input
+              type="text"
+              placeholder="Search reg. no..."
+              value={regNoSearchTerm}
+              onChange={(e) => setRegNoSearchTerm(e.target.value)}
+              className="pl-9 pr-4 py-2 w-56 border border-slate-700 bg-black/40 rounded-full text-sm text-[#f0f1f4] placeholder-slate-500 focus:outline-hidden focus:border-indigo-600"
+            />
+          </div>
         </div>
+
+        {canManage ? (
+          <button
+            onClick={openAddForm}
+            className="px-6 py-2 bg-[#d4992b] hover:bg-[#c48e2a] text-[#f0f1f4] rounded-full text-sm font-bold transition-colors shadow-2xl cursor-pointer"
+          >
+            + Add Vehicle
+          </button>
+        ) : (
+          <span className="text-sm text-slate-400 bg-[#1e2226] border border-slate-800 px-3 py-2 rounded-lg flex items-center gap-1.5 font-medium">
+            <Info className="h-3.5 w-3.5" />
+            Manager-Only Registry Actions
+          </span>
+        )}
       </div>
 
-      {/* Grid of Vehicles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVehicles.map((vehicle) => {
-          let statusBadgeColor = 'bg-slate-100 text-slate-800';
-          if (vehicle.status === 'Available') statusBadgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-100';
-          if (vehicle.status === 'On Trip') statusBadgeColor = 'bg-blue-50 text-blue-700 border-blue-100';
-          if (vehicle.status === 'In Shop') statusBadgeColor = 'bg-amber-50 text-amber-700 border-amber-100';
-          if (vehicle.status === 'Retired') statusBadgeColor = 'bg-rose-50 text-rose-700 border-rose-100';
+      {/* Table of Vehicles */}
+      <div className="bg-[#1e2226] rounded-2xl border border-slate-800 shadow-xl overflow-x-auto">
+        <table className="w-full text-sm text-center">
+          <thead className="bg-[#181a1d] border-b border-slate-800 text-slate-400">
+            <tr>
+              <th className="px-6 py-4 font-extrabold uppercase">REG. NO. (UNIQUE)</th>
+              <th className="px-6 py-4 font-extrabold uppercase">NAME/MODEL</th>
+              <th className="px-6 py-4 font-extrabold uppercase">TYPE</th>
+              <th className="px-6 py-4 font-extrabold uppercase">CAPACITY</th>
+              <th className="px-6 py-4 font-extrabold uppercase">ODOMETER</th>
+              <th className="px-6 py-4 font-extrabold uppercase">ACQ. COST</th>
+              <th className="px-6 py-4 font-extrabold uppercase">STATUS</th>
+              {canManage && <th className="px-6 py-4 font-extrabold uppercase">ACTIONS</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {filteredVehicles.map((vehicle) => {
+              let statusBadgeColor = 'bg-slate-700 text-slate-200 border-slate-600';
+              if (vehicle.status === 'Available') statusBadgeColor = 'bg-[#409240] text-[#f0f1f4] border-emerald-700';
+              if (vehicle.status === 'On Trip') statusBadgeColor = 'bg-[#1e293b] text-blue-200 border-blue-900';
+              if (vehicle.status === 'In Shop') statusBadgeColor = 'bg-[#c48e2a] text-[#181a1d] border-amber-700';
+              if (vehicle.status === 'Retired') statusBadgeColor = 'bg-[#b91c1c] text-[#f0f1f4] border-rose-900';
 
-          return (
-            <motion.div
-              layout
-              key={vehicle.registrationNumber}
-              className="bg-white rounded-xl border border-slate-200 shadow-xs hover:shadow-md transition-shadow duration-250 flex flex-col overflow-hidden"
-            >
-              {/* Header */}
-              <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-extrabold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-sm border border-slate-300">
-                      {vehicle.registrationNumber}
+              return (
+                <tr key={vehicle.registrationNumber} className="border-b border-slate-800 hover:bg-[#181a1d]/40 transition-colors">
+                  <td className="px-6 py-4 font-medium text-[#f0f1f4]">{vehicle.registrationNumber}</td>
+                  <td className="px-6 py-4 text-[#f0f1f4]">{vehicle.name}</td>
+                  <td className="px-6 py-4 text-slate-300">{vehicle.type}</td>
+                  <td className="px-6 py-4 text-slate-300">{(vehicle.maxCapacity).toLocaleString()} kg</td>
+                  <td className="px-6 py-4 text-slate-300">{(vehicle.odometer).toLocaleString()} km</td>
+                  <td className="px-6 py-4 text-slate-300">${(vehicle.acquisitionCost).toLocaleString()}</td>
+                  <td className="px-6 py-4">
+                    <span className={`text-xs px-4 py-1.5 rounded-full font-bold border ${statusBadgeColor}`}>
+                      {vehicle.status}
                     </span>
-                    <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-sm font-semibold">
-                      {vehicle.region}
-                    </span>
-                  </div>
-                  <h4 className="text-base font-bold text-slate-800 truncate max-w-[170px]" title={vehicle.name}>
-                    {vehicle.name}
-                  </h4>
-                  <p className="text-xs text-slate-400 font-medium">{vehicle.type}</p>
-                </div>
+                  </td>
+                  {canManage && (
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2 text-xs">
+                        <button
+                          onClick={() => openEditForm(vehicle)}
+                          disabled={vehicle.status === 'On Trip'}
+                          className="p-1.5 hover:bg-[#181a1d] text-slate-400 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          title="Edit vehicle details"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                          <span>Edit</span>
+                        </button>
 
-                <span className={`text-xs px-2.5 py-1 rounded-full font-bold border ${statusBadgeColor}`}>
-                  {vehicle.status}
-                </span>
-              </div>
-
-              {/* Specs Body */}
-              <div className="p-5 grid grid-cols-2 gap-4 text-xs font-medium flex-1">
-                <div className="flex items-center gap-2">
-                  <Truck className="h-4 w-4 text-slate-400" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">Capacity</p>
-                    <p className="text-slate-700 font-bold">{(vehicle.maxCapacity).toLocaleString()} kg</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-slate-400" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">Odometer</p>
-                    <p className="text-slate-700 font-bold">{(vehicle.odometer).toLocaleString()} km</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <CircleDollarSign className="h-4 w-4 text-slate-400" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">Acquisition</p>
-                    <p className="text-slate-700 font-bold">${(vehicle.acquisitionCost).toLocaleString()}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-slate-400" />
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide">Operating Hub</p>
-                    <p className="text-slate-700 font-bold">{vehicle.region} Logistics Hub</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Footer */}
-              {canManage && (
-                <div className="px-5 py-3.5 bg-slate-50/50 border-t border-slate-100 flex justify-end gap-2 text-xs">
-                  <button
-                    onClick={() => openEditForm(vehicle)}
-                    disabled={vehicle.status === 'On Trip'}
-                    className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Edit vehicle details"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleDelete(vehicle.registrationNumber)}
-                    disabled={vehicle.status === 'On Trip'}
-                    className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Remove vehicle from database"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>Delete</span>
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          );
-        })}
+                        <button
+                          onClick={() => handleDelete(vehicle.registrationNumber)}
+                          disabled={vehicle.status === 'On Trip'}
+                          className="p-1.5 hover:bg-rose-900/40 text-rose-500 rounded-lg transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                          title="Remove vehicle from database"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
 
         {filteredVehicles.length === 0 && (
-          <div className="col-span-full py-12 bg-white rounded-xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
-            <Truck className="h-12 w-12 text-slate-300 mb-3" />
-            <p className="text-slate-500 font-bold">No vehicles found</p>
-            <p className="text-slate-400 text-xs mt-1">Try relaxing your search constraints or filters.</p>
+          <div className="py-16 bg-[#1e2226] flex flex-col items-center justify-center text-center text-slate-400">
+            <Truck className="h-16 w-16 text-slate-700 mb-4" />
+            <p className="font-extrabold text-lg">No vehicles found</p>
+            <p className="text-sm mt-1.5">Try relaxing your search constraints or filters.</p>
           </div>
         )}
       </div>
 
+      <p className="text-xs font-bold text-slate-600 tracking-wider">Rule: Registration No. must be unique · Retired/In Shop vehicles are hidden from Trip Dispatcher</p>
+
       {/* Form Dialog Modal */}
       <AnimatePresence>
         {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-xs p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-xl shadow-xl w-full max-w-lg border border-slate-200 overflow-hidden"
+              className="bg-[#1e2226] rounded-xl shadow-2xl w-full max-w-lg border border-slate-800 overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+              <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-[#181a1d]">
+                <h3 className="text-sm font-bold text-[#f0f1f4] uppercase tracking-wider flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-indigo-500" />
                   {editingVehicle ? 'Edit Vehicle Profile' : 'Register New Fleet Asset'}
                 </h3>
                 <button
                   onClick={() => setIsFormOpen(false)}
-                  className="p-1.5 hover:bg-slate-200 text-slate-500 rounded-lg cursor-pointer"
+                  className="p-1.5 hover:bg-[#181a1d] text-slate-500 rounded-lg cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -357,7 +344,7 @@ export default function VehicleRegistryView({
               <form onSubmit={handleFormSubmit}>
                 <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
                   {error && (
-                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-700">
+                    <div className="p-3 bg-rose-950/40 border border-rose-900 rounded-lg flex items-center gap-2 text-xs text-rose-300">
                       <ShieldAlert className="h-4 w-4 shrink-0" />
                       <span>{error}</span>
                     </div>
@@ -366,7 +353,7 @@ export default function VehicleRegistryView({
                   <div className="grid grid-cols-2 gap-4">
                     {/* Reg Number */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                         Registration Plate (Unique)
                       </label>
                       <input
@@ -375,13 +362,13 @@ export default function VehicleRegistryView({
                         onChange={(e) => setRegNum(e.target.value)}
                         disabled={!!editingVehicle}
                         placeholder="TRK-901"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500 disabled:bg-slate-50"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600 disabled:bg-[#181a1d]/60 disabled:text-slate-600"
                       />
                     </div>
 
                     {/* Model Name */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                         Vehicle Name / Model
                       </label>
                       <input
@@ -389,19 +376,19 @@ export default function VehicleRegistryView({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Volvo FH16 Semi"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       />
                     </div>
 
                     {/* Vehicle Type */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                         Vehicle Type
                       </label>
                       <select
                         value={type}
                         onChange={(e) => setType(e.target.value as VehicleType)}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       >
                         <option value="Semi-Truck">Semi-Truck</option>
                         <option value="Heavy Duty">Heavy Duty</option>
@@ -411,40 +398,25 @@ export default function VehicleRegistryView({
                       </select>
                     </div>
 
-                    {/* Regional Hub */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
-                        Regional Logistics Hub
-                      </label>
-                      <select
-                        value={region}
-                        onChange={(e) => setRegion(e.target.value as 'North' | 'South' | 'East' | 'West')}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
-                      >
-                        <option value="North">North</option>
-                        <option value="South">South</option>
-                        <option value="East">East</option>
-                        <option value="West">West</option>
-                      </select>
-                    </div>
-
                     {/* Max Load Capacity */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
-                        Max Load Capacity (kg)
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                        <Truck className="h-3.5 w-3.5 text-indigo-400" />
+                        Max Capacity (kg)
                       </label>
                       <input
                         type="number"
                         value={maxCapacity}
                         onChange={(e) => setMaxCapacity(parseInt(e.target.value) || 0)}
                         placeholder="25000"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       />
                     </div>
 
                     {/* Odometer */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                        <Gauge className="h-3.5 w-3.5 text-indigo-400" />
                         Odometer (km)
                       </label>
                       <input
@@ -452,13 +424,14 @@ export default function VehicleRegistryView({
                         value={odometer}
                         onChange={(e) => setOdometer(parseInt(e.target.value) || 0)}
                         placeholder="145200"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       />
                     </div>
 
                     {/* Acquisition Cost */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                        <CircleDollarSign className="h-3.5 w-3.5 text-indigo-400" />
                         Acquisition Cost (USD)
                       </label>
                       <input
@@ -466,19 +439,37 @@ export default function VehicleRegistryView({
                         value={acquisitionCost}
                         onChange={(e) => setAcquisitionCost(parseInt(e.target.value) || 0)}
                         placeholder="135000"
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       />
+                    </div>
+
+                    {/* Regional Hub */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-indigo-400" />
+                        Operating Hub
+                      </label>
+                      <select
+                        value={region}
+                        onChange={(e) => setRegion(e.target.value as 'North' | 'South' | 'East' | 'West')}
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
+                      >
+                        <option value="North">North Hub</option>
+                        <option value="South">South Hub</option>
+                        <option value="East">East Hub</option>
+                        <option value="West">West Hub</option>
+                      </select>
                     </div>
 
                     {/* Vehicle Status */}
                     <div>
-                      <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-1">
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">
                         Fleet Status
                       </label>
                       <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value as VehicleStatus)}
-                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-hidden focus:border-indigo-500"
+                        className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       >
                         <option value="Available">Available</option>
                         <option value="On Trip">On Trip</option>
@@ -490,17 +481,17 @@ export default function VehicleRegistryView({
                 </div>
 
                 {/* Modal Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+                <div className="px-6 py-4 border-t border-slate-800 bg-[#181a1d] flex justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-medium cursor-pointer"
+                    className="px-4 py-2 bg-[#1e2226] border border-slate-800 text-slate-300 hover:bg-[#1e2226]/60 rounded-full text-xs font-medium cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs cursor-pointer"
+                    className="px-6 py-2 bg-[#d4992b] hover:bg-[#c48e2a] text-[#f0f1f4] rounded-full text-xs font-bold shadow-2xl cursor-pointer"
                   >
                     {editingVehicle ? 'Save Changes' : 'Register Vehicle'}
                   </button>
