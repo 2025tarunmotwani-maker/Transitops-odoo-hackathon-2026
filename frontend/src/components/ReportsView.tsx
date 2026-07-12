@@ -145,135 +145,99 @@ export default function ReportsView({
     window.print();
   };
 
+  const monthlyRevenue = [3200, 3800, 4200, 4600, 5200, 5600, 5400];
+  const revenueMax = Math.max(...monthlyRevenue, 1);
+  const costliestVehicles = vehicleReports
+    .slice()
+    .sort((a, b) => b.operationalCost - a.operationalCost)
+    .slice(0, 3);
+
   return (
-    <div className="space-y-6 print:bg-white print:p-8">
-      {/* Title & Action Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200 shadow-xs print:shadow-none print:border-none print:p-0">
-        <div>
-          <h2 className="text-base font-bold text-slate-800">Operational & Financial Reports</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Anchored Period: Fleet statistics as of July 11, 2026</p>
-        </div>
-
-        <div className="flex items-center gap-2 print:hidden">
-          <button
-            onClick={exportToCSV}
-            className="flex items-center gap-1.5 px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"
-          >
-            <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-            <span>Export CSV</span>
-          </button>
-
-          <button
-            onClick={triggerPrint}
-            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs"
-          >
-            <Printer className="h-4 w-4" />
-            <span>Export PDF / Print</span>
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 print:grid-cols-4">
-        {/* Metric 1 */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 print:shadow-none">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl print:bg-slate-100">
-            <Flame className="h-6 w-6" />
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-[0_0_0_1px_rgba(148,163,184,0.08)]">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-sm uppercase tracking-[0.35em] text-zinc-500 font-semibold mb-2">Reports & Analytics</h2>
+              <p className="text-xs text-zinc-500">Fleet intelligence snapshot for your transport operations.</p>
+            </div>
+            <div className="w-full lg:w-1/3">
+              <div className="relative rounded-2xl border border-zinc-800 bg-zinc-950/80 px-4 py-3">
+                <input
+                  className="w-full bg-transparent text-sm text-zinc-200 placeholder:text-zinc-500 outline-none"
+                  placeholder="Search..."
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Avg Fuel Efficiency</p>
-            <h3 className="text-xl font-bold text-slate-800 mt-1">{averageFuelEfficiency.toFixed(2)} km/L</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Total: {totalDistance.toLocaleString()} km run</p>
-          </div>
-        </div>
 
-        {/* Metric 2 */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 print:shadow-none">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl print:bg-slate-100">
-            <Compass className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Fleet Utilization</p>
-            <h3 className="text-xl font-bold text-slate-800 mt-1">{fleetUtilization}%</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Active / Non-retired</p>
-          </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5 shadow-[0_0_0_1px_rgba(148,163,184,0.05)]">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-sky-400/80 mb-3">Fuel Efficiency</p>
+              <div className="text-3xl font-semibold text-slate-100">{averageFuelEfficiency.toFixed(1)} km/L</div>
+            </div>
 
-        {/* Metric 3 */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 print:shadow-none">
-          <div className="p-3 bg-rose-50 text-rose-600 rounded-xl print:bg-slate-100">
-            <CircleDollarSign className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Op Expenses</p>
-            <h3 className="text-xl font-bold text-slate-800 mt-1">${totalOperationalCost.toLocaleString()}</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Fuel, Maint & Tolls</p>
-          </div>
-        </div>
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5 shadow-[0_0_0_1px_rgba(148,163,184,0.05)]">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-emerald-400/80 mb-3">Fleet Utilization</p>
+              <div className="text-3xl font-semibold text-slate-100">{fleetUtilization}%</div>
+            </div>
 
-        {/* Metric 4 */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 print:shadow-none">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl print:bg-slate-100">
-            <Award className="h-6 w-6" />
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5 shadow-[0_0_0_1px_rgba(148,163,184,0.05)]">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-amber-400/80 mb-3">Operational Cost</p>
+              <div className="text-3xl font-semibold text-slate-100">${totalOperationalCost.toLocaleString()}</div>
+            </div>
+
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5 shadow-[0_0_0_1px_rgba(148,163,184,0.05)]">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-lime-400/80 mb-3">Vehicle ROI</p>
+              <div className="text-3xl font-semibold text-slate-100">{fleetRoi.toFixed(1)}%</div>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">Fleet ROI (%)</p>
-            <h3 className="text-xl font-bold text-slate-800 mt-1">{fleetRoi.toFixed(1)}%</h3>
-            <p className="text-[10px] text-slate-400 mt-0.5">Profit vs Asset Capital</p>
+
+          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.35em] mb-4">ROI = (Revenue - (Maintenance + Fuel)) / Acquisition Cost</div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-5">
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Monthly Revenue</p>
+                </div>
+              </div>
+              <div className="flex items-end gap-3 h-40">
+                {monthlyRevenue.map((value, index) => (
+                  <div key={index} className="flex-1">
+                    <div
+                      className="rounded-t-2xl bg-sky-500"
+                      style={{ height: `${Math.max(24, (value / revenueMax) * 100)}%` }}
+                    />
+                    <div className="mt-2 h-2 rounded-full bg-zinc-900" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950 p-5">
+              <div className="mb-4">
+                <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Top Costliest Vehicles</p>
+              </div>
+              <div className="space-y-4">
+                {costliestVehicles.map((vehicle, index) => {
+                  const percentage = Math.min(100, Math.round((vehicle.operationalCost / Math.max(1, costliestVehicles[0]?.operationalCost || 1)) * 100));
+                  const barColors = ['bg-pink-500', 'bg-amber-500', 'bg-sky-500'];
+                  return (
+                    <div key={vehicle.regNum} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-zinc-300">
+                        <span>{vehicle.regNum}</span>
+                        <span className="font-semibold text-slate-100">${vehicle.operationalCost.toLocaleString()}</span>
+                      </div>
+                      <div className="h-3 rounded-full bg-zinc-900 overflow-hidden">
+                        <div className={`${barColors[index % barColors.length]} h-full`} style={{ width: `${percentage}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Table Report */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden print:border-none print:shadow-none">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between print:p-0 print:pb-4 print:border-b-2 print:border-slate-800">
-          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Fleet Registry Executive Ledger</h3>
-          <span className="text-xs text-slate-400 font-mono font-semibold print:hidden">All values in USD ($) and Metric system</span>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider print:bg-white print:border-b-2 print:border-slate-800">
-                <th className="px-6 py-4">Vehicle Plate</th>
-                <th className="px-6 py-4">Name / Model</th>
-                <th className="px-6 py-4 text-right">Distance (km)</th>
-                <th className="px-6 py-4 text-right">Fuel Consumed</th>
-                <th className="px-6 py-4 text-right">Fuel Efficiency</th>
-                <th className="px-6 py-4 text-right">Maintenance Cost</th>
-                <th className="px-6 py-4 text-right">Total Operational Cost</th>
-                <th className="px-6 py-4 text-right">Trip Revenue</th>
-                <th className="px-6 py-4 text-right bg-slate-50 border-l border-slate-100 font-extrabold text-indigo-700 print:bg-white print:border-l-0">Vehicle ROI</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 font-medium text-slate-700 print:divide-y print:divide-slate-300">
-              {vehicleReports.map((report) => {
-                let roiColor = 'text-slate-700';
-                if (report.roi > 0) roiColor = 'text-emerald-700 font-extrabold';
-                else if (report.roi < 0) roiColor = 'text-rose-600 font-extrabold';
-
-                return (
-                  <tr key={report.regNum} className="hover:bg-slate-50/50 transition-colors print:hover:bg-transparent">
-                    <td className="px-6 py-4 font-mono font-bold text-indigo-700">{report.regNum}</td>
-                    <td className="px-6 py-4 font-bold text-slate-800">{report.name}</td>
-                    <td className="px-6 py-4 text-right font-mono">{(report.distance).toLocaleString()} km</td>
-                    <td className="px-6 py-4 text-right font-mono">{report.liters > 0 ? `${report.liters} L` : '0 L'}</td>
-                    <td className="px-6 py-4 text-right font-mono text-slate-500">
-                      {report.fuelEfficiency > 0 ? `${report.fuelEfficiency.toFixed(2)} km/L` : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono">${(report.maintCost).toLocaleString()}</td>
-                    <td className="px-6 py-4 text-right font-mono">${(report.operationalCost).toLocaleString()}</td>
-                    <td className="px-6 py-4 text-right font-mono font-semibold text-slate-800">
-                      ${(report.revenue).toLocaleString()}
-                    </td>
-                    <td className={`px-6 py-4 text-right bg-indigo-50/10 border-l border-slate-100 font-mono print:bg-white print:border-l-0 ${roiColor}`}>
-                      {report.roi.toFixed(1)}%
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </div>
       </div>
     </div>
