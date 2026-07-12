@@ -25,6 +25,13 @@ interface VehicleRegistryViewProps {
   userRole: string;
 }
 
+type VehicleRegistryVehicle = Vehicle & {
+  vehicleName?: string;
+  vehicleType?: VehicleType;
+  logisticsHub?: 'North' | 'South' | 'East' | 'West';
+  maxLoadCapacity?: number;
+};
+
 export default function VehicleRegistryView({
   vehicles,
   onAddVehicle,
@@ -44,16 +51,17 @@ export default function VehicleRegistryView({
   
   // Form fields
   const [regNum, setRegNum] = useState('');
-  const [name, setName] = useState('');
-  const [type, setType] = useState<VehicleType>('Delivery Van');
+  const [vehicleName, setName] = useState('');
+  const [vehicleType, setType] = useState<VehicleType>('Delivery Van');
   const [maxCapacity, setMaxCapacity] = useState<number>(2000);
   const [odometer, setOdometer] = useState<number>(0);
   const [acquisitionCost, setAcquisitionCost] = useState<number>(30000);
   const [status, setStatus] = useState<VehicleStatus>('Available');
-  const [region, setRegion] = useState<'North' | 'South' | 'East' | 'West'>('North');
+  const [logisticsHub, setLogisticsHub] = useState<'North' | 'South' | 'East' | 'West'>('North');
   
   // Validation feedback
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Open form for adding new vehicle
   const openAddForm = () => {
@@ -66,7 +74,7 @@ export default function VehicleRegistryView({
     setOdometer(0);
     setAcquisitionCost(30000);
     setStatus('Available');
-    setRegion('North');
+    setLogisticsHub('North');
     setIsFormOpen(true);
   };
 
@@ -78,18 +86,19 @@ export default function VehicleRegistryView({
     }
     setError('');
     setEditingVehicle(vehicle);
+    const vehicleRecord = vehicle as VehicleRegistryVehicle;
     setRegNum(vehicle.registrationNumber);
-    setName(vehicle.name);
-    setType(vehicle.type);
-    setMaxCapacity(vehicle.maxCapacity);
+    setName(vehicleRecord.vehicleName ?? '');
+    setType(vehicleRecord.vehicleType ?? 'Delivery Van');
+    setMaxCapacity(vehicleRecord.maxLoadCapacity ?? 2000);
     setOdometer(vehicle.odometer);
     setAcquisitionCost(vehicle.acquisitionCost);
     setStatus(vehicle.status);
-    setRegion(vehicle.region);
+    setLogisticsHub(vehicleRecord.logisticsHub ?? 'North');
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -98,7 +107,7 @@ export default function VehicleRegistryView({
       setError('Registration Number is required.');
       return;
     }
-    if (!name.trim()) {
+    if (!vehicleName.trim()) {
       setError('Vehicle Name/Model is required.');
       return;
     }
@@ -115,29 +124,51 @@ export default function VehicleRegistryView({
       return;
     }
 
-    const payload: Vehicle = {
+    const payload = {
       registrationNumber: regNum.trim().toUpperCase(),
-      name: name.trim(),
-      type,
-      maxCapacity,
+      vehicleName: vehicleName.trim(),
+      vehicleType,
+      maxLoadCapacity: maxCapacity,
       odometer,
       acquisitionCost,
       status,
-      region
+      logisticsHub
     };
 
     if (editingVehicle) {
-      // Editing
-      onUpdateVehicle(payload);
+      onUpdateVehicle(payload as unknown as Vehicle);
       setIsFormOpen(false);
-    } else {
-      // Creating - check for uniqueness
-      const success = onAddVehicle(payload);
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      const response = await fetch(import.meta.env.VITE_API_URL || 'http://localhost:8081/api/vehicles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Unable to register vehicle.');
+      }
+
+      const success = onAddVehicle(payload as unknown as Vehicle);
       if (success) {
         setIsFormOpen(false);
       } else {
         setError(`A vehicle with Registration Number "${regNum.toUpperCase()}" already exists!`);
       }
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'Unable to register vehicle. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -154,9 +185,10 @@ export default function VehicleRegistryView({
 
   // Filter vehicles
   const filteredVehicles = vehicles.filter(v => {
-    const matchesSearch = v.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const vehicleRecord = v as VehicleRegistryVehicle;
+    const matchesSearch = (vehicleRecord.vehicleName ?? '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRegNoSearch = v.registrationNumber.toLowerCase().includes(regNoSearchTerm.toLowerCase());
-    const matchesType = typeFilter === 'All' || v.type === typeFilter;
+    const matchesType = typeFilter === 'All' || vehicleRecord.vehicleType === typeFilter;
     const matchesStatus = statusFilter === 'All' || v.status === statusFilter;
     return matchesSearch && matchesRegNoSearch && matchesType && matchesStatus;
   });
@@ -264,9 +296,9 @@ export default function VehicleRegistryView({
               return (
                 <tr key={vehicle.registrationNumber} className="border-b border-slate-800 hover:bg-[#181a1d]/40 transition-colors">
                   <td className="px-6 py-4 font-medium text-[#f0f1f4]">{vehicle.registrationNumber}</td>
-                  <td className="px-6 py-4 text-[#f0f1f4]">{vehicle.name}</td>
-                  <td className="px-6 py-4 text-slate-300">{vehicle.type}</td>
-                  <td className="px-6 py-4 text-slate-300">{(vehicle.maxCapacity).toLocaleString()} kg</td>
+                  <td className="px-6 py-4 text-[#f0f1f4]">{(vehicle as Vehicle & { vehicleName?: string }).vehicleName ?? ''}</td>
+                  <td className="px-6 py-4 text-slate-300">{(vehicle as Vehicle & { vehicleType?: VehicleType }).vehicleType ?? ''}</td>
+                  <td className="px-6 py-4 text-slate-300">{((vehicle as Vehicle & { maxLoadCapacity?: number }).maxLoadCapacity ?? 0).toLocaleString()} kg</td>
                   <td className="px-6 py-4 text-slate-300">{(vehicle.odometer).toLocaleString()} km</td>
                   <td className="px-6 py-4 text-slate-300">${(vehicle.acquisitionCost).toLocaleString()}</td>
                   <td className="px-6 py-4">
@@ -373,7 +405,7 @@ export default function VehicleRegistryView({
                       </label>
                       <input
                         type="text"
-                        value={name}
+                        value={vehicleName}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Volvo FH16 Semi"
                         className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
@@ -386,7 +418,7 @@ export default function VehicleRegistryView({
                         Vehicle Type
                       </label>
                       <select
-                        value={type}
+                        value={vehicleType}
                         onChange={(e) => setType(e.target.value as VehicleType)}
                         className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       >
@@ -447,11 +479,11 @@ export default function VehicleRegistryView({
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
                         <MapPin className="h-3.5 w-3.5 text-indigo-400" />
-                        Operating Hub
+                        Logistics Hub
                       </label>
                       <select
-                        value={region}
-                        onChange={(e) => setRegion(e.target.value as 'North' | 'South' | 'East' | 'West')}
+                        value={logisticsHub}
+                        onChange={(e) => setLogisticsHub(e.target.value as 'North' | 'South' | 'East' | 'West')}
                         className="w-full border border-slate-700 rounded-lg px-3 py-2 text-sm text-[#f0f1f4] bg-black/40 focus:outline-hidden focus:border-indigo-600"
                       >
                         <option value="North">North Hub</option>
@@ -491,9 +523,10 @@ export default function VehicleRegistryView({
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-[#d4992b] hover:bg-[#c48e2a] text-[#f0f1f4] rounded-full text-xs font-bold shadow-2xl cursor-pointer"
+                    disabled={isSubmitting}
+                    className="px-6 py-2 bg-[#d4992b] hover:bg-[#c48e2a] text-[#f0f1f4] rounded-full text-xs font-bold shadow-2xl cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {editingVehicle ? 'Save Changes' : 'Register Vehicle'}
+                    {isSubmitting ? 'Saving...' : editingVehicle ? 'Save Changes' : 'Register Vehicle'}
                   </button>
                 </div>
               </form>
